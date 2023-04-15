@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LibreConvertRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\Process;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class LibreController extends Controller
@@ -17,19 +18,26 @@ class LibreController extends Controller
     public function convert(LibreConvertRequest $request): BinaryFileResponse|HttpResponseException
     {
         $bin = config('libre.bin');
-
         $file = $request->file('document');
+
+        // Move the uploaded file temporarily to storage
+        $file->move(storage_path(), $file->getClientOriginalName());
+        $movedPath = storage_path($file->getClientOriginalName());
+
         $to = $request->get('to');
-        $outdir = dirname($file);
+        $outdir = storage_path();
+        $cmd = "$bin --headless --convert-to $to {$movedPath} --outdir $outdir";
+        $result = Process::run($cmd);
 
-        $cmd = "$bin --headless --convert-to $to {$file->getRealPath()} --outdir $outdir";
+        // Replace the file extension with the `to` extension
+        $newPath = str_replace('.' . $file->getClientOriginalExtension(), '.' . $to, $movedPath);
 
-        $result = shell_exec($cmd);
-
-        $newPath = str_replace('.' . $file->getExtension(), '.' . $to, $file);
+        // Remove the uploaded file
+        unlink($movedPath);
 
         if (!file_exists($newPath)) {
-            abort(403, "Error converting file ({$result})");
+            logger($result->errorOutput());
+            abort(403, "Error converting file ({$result->errorOutput()})");
         }
 
         return response()->file($newPath)->deleteFileAfterSend();
