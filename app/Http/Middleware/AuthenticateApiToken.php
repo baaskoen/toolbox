@@ -15,6 +15,10 @@ class AuthenticateApiToken
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if (app()->isLocal()) {
+            return $next($request);
+        }
+
         $apiKey = $request->query('api_key', $request->get('api_key'));
 
         if (!$apiKey || $apiKey !== config('auth.api_key')) {

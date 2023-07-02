@@ -11,7 +11,7 @@ like LibreOffice, which is software which you don't want to install on every ser
 Every endpoint requires you to supply an `api_key`. This key can be either be supplied in
 the request body, or in the query params. You can get this key by contacting me.
 
-### Converting documents
+## Converting documents
 You can convert documents by doing a POST request to the following route and parameters:
 
 Endpoint: `/api/libre/convert-file`
@@ -54,6 +54,27 @@ $saveLocation = storage_path('converted');
 file_put_contents($saveLocation, $response->getBody()->getContents());
 ```
 
+## Searching companies
+
+### Suggestions
+You can search Dutch companies by doing a GET request to the following route:
+
+Endpoint: `/api/companies`
+
+Arguments:
+- `api_key`: API key
+- `query`: Keyword, for example "Qlic Groningen"
+
+### Details
+You can retrieve details for a company by doing a GET request:
+
+Endpoint: `/api/companies/{slug}`
+
+Where `slug` contains either a KVK number, Company ID or company slug.
+
+Arguments:
+- `api_key`: API key
+
 ## Installing toolbox on your own
 
 This application can be installed like any other Laravel installation.
@@ -61,7 +82,6 @@ Make sure you supply the following `.env` variables:
 
 ```dotenv
 API_KEY=T00LB0X1!
-LIBRE_BIN=usr/bin/soffice
 ```
 
 You are required to install LibreOffice on your system.
